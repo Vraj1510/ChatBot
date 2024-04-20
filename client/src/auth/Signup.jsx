@@ -3,13 +3,41 @@ import { useNavigate, Link } from 'react-router-dom';
 // import { useIndex } from './IndexContext';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { useFormik } from 'formik';
+import { useIndex } from '../IndexContext';
+import { useEffect } from 'react';
 // import validationSchema from '../Schema';
 function Signup() {
   // const [username, setUsername1] = useState('');
   // const [password, setPassword] = useState('');
   // const [email, setEmail] = useState('');
+  const { updateUsername } = useIndex();
   const [showPassword, setShowPassword] = useState(false);
-  const navigate=useNavigate();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/checksession', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include', // This line enables sending cookies
+        });
+        console.log(response);
+        const result = await response.json();
+        console.log(result);
+        if (result.valid === true) {
+          navigateToDashboard({ state: { username: values.username } });
+        } else {
+        }
+      } catch (err) {
+        console.error('Error during session check:', err.message);
+      }
+    };
+    checkSession();
+  }, []);
+
+  // const navigate=useNavigate();
   const initialValues = {
     username: '',
     email: '',
@@ -25,10 +53,106 @@ function Signup() {
       const { username, email, password } = values;
     },
   });
-  const handleSignUp=()=>{
-    navigate('/app/chat');
-  }
+  // const handleSignUp=()=>{
+  //   navigate('/app/chat');
+  // }
   // console.log(values)
+  const registerjwt = async () => {
+    const myHeaders = new Headers();
+    myHeaders.append('Content-Type', 'application/json');
+
+    const raw = JSON.stringify({
+      username: values.username,
+    });
+
+    const requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      credentials: 'include',
+      withCredentials: true,
+      body: raw,
+    };
+
+    const response = await fetch('http://localhost:3001/registerjwttoken', requestOptions);
+    await response.json();
+    navigateToDashboard({ state: { username: values.username } });
+  };
+  const checkUser = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/checkUser', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: values.username,
+        }),
+      });
+      console.log(response);
+      if (response.ok) {
+        const responseData = await response.json();
+        console.log(responseData.message);
+        await Input();
+      } else {
+        const errorData = await response.json();
+        console.error(errorData.error);
+        alert('User Already Exists');
+      }
+    } catch (err) {
+      console.error('Error during login:', err.message);
+    }
+  };
+  const Input = async () => {
+    // e.preventDefault();
+    try {
+      const body = { username: values.username, password: values.password, email: values.email };
+      console.log(body);
+      const response = await fetch('http://localhost:3001/insert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        console.error('API request failed with status:', response.status);
+        return;
+      }
+      const responseData = await response.json();
+      if (responseData.success) {
+        console.log('User created successfully');
+      } else {
+        console.error('User creation failed:', responseData.message);
+      }
+      await registerjwt();
+      navigateToDashboard({ state: { username: values.username } });
+    } catch (err) {
+      console.error(err.message);
+    }
+  };
+  const navigate = useNavigate();
+  const navigateToDashboard = (state) => {
+    updateUsername(values.username);
+    navigate('/app/chat', state);
+  };
+
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    if (values.username.trim() === '') {
+      alert('Please fill in username.');
+    } else if (values.password.trim() === '') {
+      alert('Please fill in password.');
+    } else if (values.email.trim() === '') {
+      alert('Please fill in email.');
+    } else if (
+      !values.password.match('^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$')
+    ) {
+      alert(
+        'The password must contain at least 8 characters, 1 capital alphabet, 1 small alphabet, 1 special character, and 1 digit',
+      );
+    } else {
+      await checkUser();
+      // }
+    }
+  };
 
   return (
     <div className='select-none flex justify-center items-center h-screen bg-[#f3f4f6]'>
@@ -88,7 +212,7 @@ function Signup() {
                 stroke-width='2'
                 stroke-linecap='round'
                 stroke-linejoin='round'
-                className='sticky inset-y-0 right-0 mr-3 my-auto h-5 w-5 text-gray-500'
+                className='absolute inset-y-0 right-0 mr-3 my-auto h-5 w-5 text-gray-500'
                 onClick={() => {
                   setShowPassword(!showPassword);
                 }}
@@ -136,8 +260,8 @@ function Signup() {
           ) : null}
 
           <button
-            onClick={() => {
-              handleSignUp();
+            onClick={async (e) => {
+              await handleSignUp(e);
             }}
             className='inline-flex items-center justify-center whitespace-nowrap rounded-md text-md font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full bg-black text-white'
           >

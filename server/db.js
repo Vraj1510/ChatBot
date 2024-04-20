@@ -4,6 +4,6 @@ const pool = new Pool({
   password: 'vraj1510',
   host: 'localhost',
   port: 5432,
-  database: 'socialmediaapp',
+  database: 'chatbot',
 });
 module.exports = pool;

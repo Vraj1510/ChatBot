@@ -1,33 +1,36 @@
-import * as Yup from 'yup';
+import * as yup from 'yup';
 
-export const RegisterSchema = Yup.object({
-  username: Yup.string().min(2).max(25).required('Please enter your username.'),
-  email: Yup.string().email().required('Please enter your email.'),
-  password: Yup.string().min(6).required('Password must be atleast 6 characters.'),
-  confirm_password: Yup.string()
-    .required()
-    .oneOf([Yup.ref('password'), null], 'Password must match'),
+const validationSchema = yup.object({
+  username: yup
+    .string()
+    .required('Username is required')
+    .min(3, 'Username must be at least 3 characters long')
+    .max(20, 'Username must not exceed 20 characters'),
+  email: yup.string().email('Invalid email address').required('Email is required'),
+  password: yup
+    .string()
+    .required('Password is required')
+    .min(8, 'Password must be at least 8 characters long')
+    .matches(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+    ),
 });
 
-export const LoginSchema = Yup.object({
-  email: Yup.string().email().required('Please enter your email.'),
-  password: Yup.string().min(6).required('Password must be atleast 6 characters.'),
+export const loginSchema = yup.object({
+  username: yup
+    .string()
+    .required('Username is required')
+    .min(3, 'Username must be at least 3 characters long')
+    .max(20, 'Username must not exceed 20 characters'),
+  password: yup
+    .string()
+    .required('Password is required')
+    .min(8, 'Password must be at least 8 characters long')
+    .matches(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+    ),
 });
 
-export const UpdateProfileSchema = Yup.object({
-  username: Yup.string().min(2).max(25).required('Please enter your username.'),
-  email: Yup.string().email().required('Please enter your email.'),
-});
-
-export const UpdatePasswordSchema = Yup.object({
-  oldpassword: Yup.string().min(6).required('Password must be atleast 6 characters.'),
-  newpassword: Yup.string().min(6).required('Password must be atleast 6 characters.'),
-});
-
-export const ForgotPasswordSchema = Yup.object({
-  email: Yup.string().email().required('Please enter your email.'),
-});
-
-export const ResetPasswordSchema = Yup.object({
-  password: Yup.string().min(6).required('Password must be atleast 6 characters.'),
-});
+export default validationSchema;

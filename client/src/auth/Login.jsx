@@ -2,7 +2,8 @@ import React from 'react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
-// import { loginSchema } from '../Schema';
+import { useEffect } from 'react';
+import { loginSchema } from '../Schema';
 import { useFormik } from 'formik';
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -11,6 +12,29 @@ function Login() {
   };
   var bool1 = false;
   const navigate = useNavigate();
+  const navigateToDashboard = (state) => {
+    navigate('/app/chat', state);
+  };
+  const registerjwt = async () => {
+    const myHeaders = new Headers();
+    myHeaders.append('Content-Type', 'application/json');
+
+    const raw = JSON.stringify({
+      username: values.username,
+    });
+
+    const requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      credentials: 'include',
+      withCredentials: true,
+      body: raw,
+    };
+
+    const response = await fetch('http://localhost:3001/registerjwttoken', requestOptions);
+    await response.json();
+    navigateToDashboard({ state: { username: values.username } });
+  };
 
   const initialValues = {
     username: '',
@@ -19,7 +43,7 @@ function Login() {
 
   const { values, errors, touched, handleBlur, handleChange, handleSubmit } = useFormik({
     initialValues: initialValues,
-    // validationSchema: loginSchema,
+    validationSchema: loginSchema,
 
     onSubmit: (values, e) => {
       e.preventDefault();
@@ -27,6 +51,94 @@ function Login() {
     },
   });
   console.log(values);
+  const check = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/handlelogin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        withCredentials: true,
+        body: JSON.stringify({
+          username: values.username,
+          password: values.password,
+        }),
+      });
+      console.log(response);
+      if (response.ok) {
+        return true; // Login successful
+      } else {
+        const errorData = await response.json();
+        console.error(errorData.error);
+        alert('User does not exist or invalid credentials');
+        return false; // Login failed
+      }
+    } catch (err) {
+      console.error('Error during login:', err.message);
+      return false; // Login failed
+    }
+  };
+
+  useEffect(() => {
+    const disableBackButton = (event) => {
+      event.preventDefault();
+      return false;
+    };
+
+    // Disable the back button
+    window.history.pushState(null, null, window.location.pathname);
+    window.addEventListener('popstate', disableBackButton);
+
+    return () => {
+      // Re-enable the back button when the component unmounts
+      window.removeEventListener('popstate', disableBackButton);
+    };
+  }, []);
+
+  const handleLogin = async () => {
+    // if (username.trim() === '') {
+    //   alert('Please fill in username.');
+    // } else if (password.trim() === '') {
+    //   alert('Please fill in password.');
+    // } else if (!password.match('^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$')) {
+    //   alert(
+    //     'The password must contain at least 8 characters, 1 capital alphabet, 1 small alphabet, 1 special character, and 1 digit',
+    //   );
+    // } else {
+    const loginSuccess = await check();
+    console.log(loginSuccess);
+    if (loginSuccess) {
+      console.log('Reachingggggg here');
+      await registerjwt();
+      navigateToDashboard({ state: { username: values.username } }); // Navigate to OTP page if login is successful
+    }
+    // }
+  };
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/checksession', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include', // This line enables sending cookies
+        });
+        console.log(response);
+        const result = await response.json();
+        console.log(result);
+        if (result.valid === true) {
+          navigateToDashboard({ state: { username: values.username } });
+        } else {
+        }
+      } catch (err) {
+        console.error('Error during session check:', err.message);
+      }
+    };
+    checkSession();
+  }, []);
 
   return (
     <div class='flex justify-center items-center h-screen bg-[#f3f4f6]'>
