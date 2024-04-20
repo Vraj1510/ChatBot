@@ -10,8 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "formik": "^2.4.5",
+    "lucide-react": "^0.372.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-avatar": "^5.0.3",
+    "react-dom": "^18.2.0",
+    "react-router": "^6.22.3",
+    "react-router-dom": "^6.22.3",
+    "yup": "^1.4.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",

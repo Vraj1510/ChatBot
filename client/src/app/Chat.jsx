@@ -1,9 +1,16 @@
-import React from 'react'
-
+import React from 'react';
+import Sidebar from './Sidebar';
+import Chatbody from './Chatbody';
 const Chat = () => {
+  console.log("Reaching here")
   return (
-    <div>Chat</div>
-  )
-}
+    <>
+      <div className='flex contain'>
+        <Sidebar />
+        <Chatbody />
+      </div>
+    </>
+  );
+};
 
-export default Chat
+export default Chat;
